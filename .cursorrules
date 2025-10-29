@@ -1,0 +1,655 @@
+# 📅 캘린더 애플리케이션 개발 규칙
+
+## 🎯 프로젝트 개요
+
+React TypeScript 기반의 **캘린더 일정 관리 시스템**입니다.
+
+### 핵심 아키텍처 원칙
+1. **관심사 분리**: Hooks(로직) / Utils(순수 함수) / Components(UI)
+2. **테스트 주도 개발**: 한글 설명의 포괄적인 테스트 커버리지
+3. **타입 안전성**: 엄격한 TypeScript, 명시적 타입 정의
+4. **접근성 우선**: ARIA 레이블 및 시맨틱 HTML
+5. **성능 최적화**: React 최적화 패턴 적절히 사용
+
+### 주요 명령어
+```bash
+pnpm dev      # 개발 서버 시작 (서버 + 클라이언트)
+pnpm test     # 테스트 실행
+pnpm lint     # 코드 품질 검사
+pnpm build    # 프로덕션 빌드
+```
+
+---
+
+## 📂 프로젝트 구조
+
+### 필수 디렉토리 구조
+```
+src/
+├── App.tsx              # 메인 애플리케이션 컴포넌트
+├── types.ts             # TypeScript 타입 정의
+├── main.tsx             # 진입점
+├── hooks/               # 커스텀 React 훅만 위치
+│   ├── useEventForm.ts
+│   ├── useCalendarView.ts
+│   ├── useEventOperations.ts
+│   ├── useNotifications.ts
+│   └── useSearch.ts
+├── utils/               # 순수 함수만 위치
+│   ├── dateUtils.ts
+│   ├── eventOverlap.ts
+│   ├── eventUtils.ts
+│   ├── notificationUtils.ts
+│   └── timeValidation.ts
+├── apis/                # API 관련 함수만 위치
+│   └── fetchHolidays.ts
+├── __tests__/           # 모든 테스트 파일
+│   ├── hooks/          # 훅 테스트
+│   ├── unit/           # 단위 테스트
+│   └── medium.integration.spec.tsx
+└── __mocks__/          # 목 데이터 및 핸들러
+```
+
+### 절대 금지 사항
+- ❌ 비즈니스 로직을 컴포넌트에 직접 작성
+- ❌ 유틸리티 함수와 React 훅 혼합
+- ❌ 부모 디렉토리에서 두 번 이상 import (`../../` 금지)
+- ❌ 정해진 디렉토리 구조 외부에 파일 생성
+
+---
+
+## 🔒 TypeScript 규칙
+
+### 필수 사항
+- **반드시** 모든 데이터 구조에 인터페이스 정의
+- **반드시** 제한된 값 집합에는 유니온 타입 사용
+- **반드시** 복잡한 함수에 JSDoc 주석 추가
+- **반드시** 함수의 명시적 반환 타입 지정
+- **반드시** 함수 파라미터 타입 지정
+- **반드시** 불변 배열에 `as const` 사용
+
+### 절대 금지
+- ❌ `any` 타입 사용 (필요시 `unknown` 사용)
+- ❌ TypeScript 에러 무시
+- ❌ 설명 없이 `@ts-ignore` 사용
+- ❌ 과도하게 복잡한 제네릭 타입 생성
+
+### 올바른 타입 정의 예시
+```typescript
+/**
+ * 캘린더 이벤트를 나타내는 인터페이스
+ */
+export interface Event {
+  id: string;
+  title: string;
+  date: string;        // YYYY-MM-DD 형식
+  startTime: string;   // HH:MM 형식
+  endTime: string;     // HH:MM 형식
+  description: string;
+  location: string;
+  category: string;
+  repeat: RepeatInfo;
+  notificationTime: number;
+}
+
+export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
+```
+
+---
+
+## ⚛️ React & Hooks 규칙
+
+### 커스텀 훅 구조 (필수 패턴)
+```typescript
+export const useCustomHook = (initialValue?: Type) => {
+  // 1. 상태 선언
+  const [state, setState] = useState(initialValue || defaultValue);
+  
+  // 2. 파생 상태
+  const [errorState, setErrorState] = useState<ErrorType>({});
+  
+  // 3. 이벤트 핸들러
+  const handleEvent = (e: ChangeEvent<HTMLInputElement>) => {
+    // 핸들러 로직
+  };
+  
+  // 4. 유틸리티 함수
+  const resetFunction = () => {
+    // 리셋 로직
+  };
+  
+  // 5. 객체로 반환 (배열 금지)
+  return {
+    state,
+    setState,
+    errorState,
+    handleEvent,
+    resetFunction,
+  };
+};
+```
+
+### 훅 규칙 (절대 위반 금지)
+- **반드시** 커스텀 훅은 객체를 반환 (배열 반환 금지)
+- **반드시** 커스텀 훅 이름은 `use`로 시작
+- **반드시** 로딩 및 에러 상태 처리
+- **절대** 조건부로 훅 호출 금지
+- **절대** 상태 직접 변경 금지
+
+### 상태 업데이트 패턴
+```typescript
+// ✅ 올바른 방법
+const updateState = (newValue: string) => {
+  setState(prev => ({ ...prev, property: newValue }));
+};
+
+// ❌ 잘못된 방법
+const updateState = (newValue: string) => {
+  state.property = newValue; // 직접 변경 금지!
+};
+```
+
+### 컴포넌트 구조 패턴
+```typescript
+function ComponentName() {
+  // 1. 커스텀 훅 먼저
+  const { data, setData } = useCustomHook();
+  
+  // 2. 로컬 상태
+  const [localState, setLocalState] = useState();
+  
+  // 3. 이벤트 핸들러
+  const handleEvent = useCallback(() => {
+    // 로직
+  }, [dependencies]);
+  
+  // 4. 렌더 함수
+  const renderSection = () => {
+    return <div>{/* JSX */}</div>;
+  };
+  
+  // 5. 메인 JSX 반환
+  return <div>{/* 컴포넌트 */}</div>;
+}
+```
+
+### Import 순서 (절대 준수)
+```typescript
+// 1. 외부 라이브러리 (Material-UI, React 등)
+import { Box, Button } from '@mui/material';
+import { useState, useCallback } from 'react';
+
+// 2. 내부 모듈 (hooks, utils, types)
+import { useEventForm } from './hooks/useEventForm.ts';
+import { Event } from './types';
+```
+
+---
+
+## 🎨 Material-UI & 스타일링
+
+### 컴포넌트 사용 (필수)
+```typescript
+// ✅ 올바른 Material-UI 사용
+<Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
+  <Stack direction="row" spacing={6} sx={{ height: '100%' }}>
+    <Typography variant="h4">제목</Typography>
+    <TextField
+      id="input-id"
+      size="small"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
+  </Stack>
+</Box>
+```
+
+### 접근성 규칙 (절대 생략 금지)
+- **반드시** 폼 입력에 `id` 속성 제공
+- **반드시** 아이콘 버튼에 `aria-label` 사용
+- **반드시** 시맨틱 HTML 요소 사용
+- **반드시** 적절한 폼 레이블 제공
+
+### 폼 컴포넌트 패턴
+```typescript
+<FormControl fullWidth>
+  <FormLabel htmlFor="field-id">필드 레이블</FormLabel>
+  <TextField
+    id="field-id"
+    size="small"
+    value={value}
+    onChange={(e) => setValue(e.target.value)}
+    error={!!error}
+    helperText={error}
+  />
+</FormControl>
+```
+
+### 아이콘 버튼 패턴
+```typescript
+<IconButton 
+  aria-label="작업 설명" 
+  onClick={handleAction}
+>
+  <ActionIcon />
+</IconButton>
+```
+
+### 절대 금지
+- ❌ `sx` prop 대신 인라인 스타일 사용
+- ❌ 접근성 속성 누락
+- ❌ 하드코딩된 색상 (테마 색상 사용)
+- ❌ Material-UI에 있는데 커스텀 컴포넌트 생성
+
+---
+
+## 📅 캘린더 도메인 규칙
+
+### 날짜 처리 (필수)
+- **반드시** 날짜는 ISO 형식 사용 (YYYY-MM-DD)
+- **반드시** 시간은 24시간 형식 사용 (HH:MM)
+- **반드시** 테스트에서 타임존은 UTC로 처리
+- **반드시** 날짜 범위 및 윤년 검증
+
+### 이벤트 검증 규칙
+- **반드시** 시작 시간이 종료 시간보다 앞인지 검증
+- **반드시** 이벤트 겹침 확인
+- **반드시** 필수 필드 검증 (title, date, startTime, endTime)
+- **절대** 유효하지 않은 날짜/시간 조합 허용 금지
+
+### 이벤트 겹침 감지
+```typescript
+const findOverlappingEvents = (newEvent: EventForm, existingEvents: Event[]): Event[] => {
+  return existingEvents.filter(event => {
+    // 같은 날짜인지 확인
+    if (event.date !== newEvent.date) return false;
+    
+    // 시간 겹침 로직
+    const newStart = newEvent.startTime;
+    const newEnd = newEvent.endTime;
+    const existingStart = event.startTime;
+    const existingEnd = event.endTime;
+    
+    return (newStart < existingEnd && newEnd > existingStart);
+  });
+};
+```
+
+### 주(Week) 계산 규칙
+- **반드시** 주는 일요일부터 시작 (한국 캘린더 표준)
+- **반드시** 월 경계를 올바르게 처리
+- **반드시** 2월의 윤년 고려
+- **반드시** ISO 주에는 목요일 기반 주 번호 사용
+
+### 절대 금지
+- ❌ 계산에 로컬 타임존 사용
+- ❌ 윤년 엣지 케이스 무시
+- ❌ 여러 날에 걸친 이벤트 허용
+- ❌ 겹침 검증 생략
+
+---
+
+## 🌐 API & 데이터 관리
+
+### API 함수 구조 (필수)
+```typescript
+export const fetchData = async (): Promise<DataType[]> => {
+  try {
+    const response = await fetch('/api/endpoint');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    throw error;
+  }
+};
+```
+
+### 에러 처리 규칙
+- **반드시** HTTP 에러를 적절히 처리
+- **반드시** 에러 발생 시 사용자 피드백 제공
+- **반드시** 디버깅을 위한 에러 로깅
+- **절대** API 에러를 조용히 무시 금지
+
+### 훅 통합 패턴
+```typescript
+export const useDataOperations = () => {
+  const [data, setData] = useState<DataType[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const saveData = async (newData: DataType) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const saved = await apiCall(newData);
+      setData(prev => [...prev, saved]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return { data, loading, error, saveData };
+};
+```
+
+### 절대 금지
+- ❌ API 응답에 `any` 타입 사용
+- ❌ 로딩 상태 무시
+- ❌ 에러 처리 없이 API 호출
+- ❌ API 엔드포인트 하드코딩
+
+---
+
+## ✅ 코드 품질 & 모범 사례
+
+### 코드 조직 (필수)
+- **반드시** 의미 있는 변수 및 함수 이름 사용
+- **반드시** 한 가지 일만 잘하는 함수 작성
+- **반드시** 상속보다 조합 선호
+- **반드시** 불변 값에 `const` 사용
+
+### 성능 규칙
+- **반드시** 자식 컴포넌트에 전달하는 이벤트 핸들러에 `useCallback` 사용
+- **반드시** 비용이 큰 계산에 `useMemo` 사용
+- **반드시** 렌더 중 객체/함수 생성 피하기
+- **절대** 불필요한 리렌더 발생시키지 않기
+
+### 상수 패턴
+```typescript
+// ✅ 올바른 방법 - 명명된 상수
+const CATEGORIES = ['업무', '개인', '가족', '기타'] as const;
+const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const NOTIFICATION_OPTIONS = [
+  { value: 1, label: '1분 전' },
+  { value: 10, label: '10분 전' },
+  { value: 60, label: '1시간 전' },
+  { value: 120, label: '2시간 전' },
+  { value: 1440, label: '1일 전' },
+] as const;
+
+// ❌ 잘못된 방법 - 매직 넘버
+if (value === 1) { /* 1이 무엇을 의미하는가? */ }
+```
+
+### 함수 문서화
+```typescript
+/**
+ * 주어진 년도와 월의 일수를 계산합니다
+ * @param year - 년도 (예: 2025)
+ * @param month - 월 (1-12)
+ * @returns 해당 월의 일수
+ */
+export function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+```
+
+### 절대 금지 (코드 스멜)
+- ❌ 50줄 이상의 함수 작성
+- ❌ 매직 넘버 사용 (명명된 상수 사용)
+- ❌ 코드 중복 (유틸리티로 추출)
+- ❌ ESLint 경고 무시
+
+---
+
+## 🧪 테스팅 표준
+
+### 테스트 구조 (필수)
+```typescript
+describe('함수명', () => {
+  it('유효한 입력이 주어지면 예상된 결과를 반환해야 함', () => {
+    // Arrange (준비)
+    const input = 'test-input';
+    
+    // Act (실행)
+    const result = functionToTest(input);
+    
+    // Assert (검증)
+    expect(result).toBe('expected-output');
+  });
+  
+  it('엣지 케이스를 올바르게 처리해야 함', () => {
+    // 엣지 케이스 테스트
+  });
+});
+```
+
+### 테스트 작성 규칙
+- **반드시** 비즈니스 로직 설명은 한글로 작성
+- **반드시** 엣지 케이스 테스트 (윤년, 월 경계 등)
+- **반드시** 시나리오를 설명하는 서술적인 테스트 이름
+- **반드시** AAA 패턴 (Arrange, Act, Assert) 따르기
+
+### 테스트 데이터 패턴
+```typescript
+const mockEvents: Event[] = [
+  {
+    id: '1',
+    title: '테스트 이벤트',
+    date: '2025-07-01',
+    startTime: '09:00',
+    endTime: '10:00',
+    description: '',
+    location: '',
+    category: '업무',
+    repeat: { type: 'none', interval: 1 },
+    notificationTime: 10,
+  },
+];
+```
+
+### 훅 테스트 패턴
+```typescript
+describe('useCustomHook', () => {
+  it('올바른 기본값으로 초기화되어야 함', () => {
+    const { result } = renderHook(() => useCustomHook());
+    
+    expect(result.current.state).toBe('default-value');
+  });
+  
+  it('액션 호출 시 상태가 업데이트되어야 함', () => {
+    const { result } = renderHook(() => useCustomHook());
+    
+    act(() => {
+      result.current.updateState('new-value');
+    });
+    
+    expect(result.current.state).toBe('new-value');
+  });
+});
+```
+
+### 절대 금지
+- ❌ 단언(assertion) 없는 테스트 작성
+- ❌ 구현 세부사항 테스트
+- ❌ 에러 조건 테스트 생략
+- ❌ 테스트 데이터에 `any` 타입 사용
+
+---
+
+## 🛠️ 개발 워크플로우
+
+### 개발 명령어 (필수 사용)
+```bash
+pnpm dev            # 개발 서버 시작 (서버 + 클라이언트)
+pnpm test           # 테스트 실행
+pnpm test:coverage  # 테스트 커버리지 확인
+pnpm lint           # 코드 품질 검사
+pnpm build          # 프로덕션 빌드 검증
+```
+
+### Git 워크플로우 규칙
+- **반드시** 논리적이고 원자적인 단위로 커밋
+- **반드시** 서술적인 커밋 메시지 작성
+- **반드시** 커밋 전 테스트 실행
+- **절대** 깨진 코드 커밋 금지
+
+### 커밋 전 체크리스트
+```bash
+# 모든 커밋 전에 실행
+pnpm lint          # 코드 품질 확인
+pnpm test          # 모든 테스트 실행
+pnpm build         # 빌드 작동 확인
+```
+
+### 코드 리뷰 체크리스트
+- [ ] 모든 테스트 통과
+- [ ] TypeScript 에러 없음
+- [ ] ESLint 경고 해결
+- [ ] 접근성 속성 존재
+- [ ] 에러 처리 구현
+- [ ] 성능 고려사항 처리
+
+### 절대 금지
+- ❌ 린팅 없이 커밋
+- ❌ 새 기능 추가 시 테스트 생략
+- ❌ 대용량 파일이나 빌드 결과물 커밋
+- ❌ TypeScript 에러 무시
+
+---
+
+## 📋 반복 일정 기능 특별 규칙
+
+### 반복 일정 생성
+- **반드시** 반복 종료일은 2025-12-31까지로 제한
+- **반드시** 매월 31일 선택 시 31일이 있는 달에만 생성 (마지막 날 X)
+- **반드시** 윤년 2월 29일 선택 시 윤년에만 생성
+- **반드시** `repeatGroupId`로 반복 그룹 관리
+
+### 반복 일정 수정/삭제
+- **반드시** 사용자에게 "단일" vs "전체" 선택 옵션 제공
+- **반드시** 단일 수정 시 반복에서 분리 (`repeat.type = 'none'`)
+- **반드시** 전체 수정 시 `repeatGroupId`로 그룹 전체 업데이트
+- **반드시** 삭제 시 안전 확인 다이얼로그 표시
+
+### 반복 일정 표시
+- **반드시** 반복 아이콘으로 시각적 구분
+- **반드시** Material-UI `Repeat` 아이콘 사용
+- **반드시** 아이콘에 `aria-label="반복 일정"` 추가
+- **반드시** 우선순위: 알림 아이콘 > 반복 아이콘
+
+---
+
+## 🚫 절대 금지 사항 요약
+
+### 타입 & 코드
+- ❌ `any` 타입 사용
+- ❌ TypeScript 에러 무시
+- ❌ 매직 넘버 사용
+- ❌ 50줄 이상 함수
+- ❌ 코드 중복
+
+### React & 훅
+- ❌ 훅을 조건부로 호출
+- ❌ 상태 직접 변경
+- ❌ useEffect에서 의존성 배열 생략
+- ❌ 커스텀 훅이 배열 반환
+- ❌ 컴포넌트에 비즈니스 로직
+
+### 스타일 & UI
+- ❌ 접근성 속성 누락
+- ❌ 인라인 스타일 사용
+- ❌ 하드코딩된 색상
+- ❌ 시맨틱 HTML 미사용
+
+### API & 데이터
+- ❌ 에러 처리 없이 API 호출
+- ❌ 로딩 상태 무시
+- ❌ API 에러 조용히 무시
+- ❌ 엔드포인트 하드코딩
+
+### 테스팅
+- ❌ 단언 없는 테스트
+- ❌ 에러 조건 테스트 생략
+- ❌ 엣지 케이스 무시
+- ❌ 구현 세부사항 테스트
+
+### 워크플로우
+- ❌ 린팅 없이 커밋
+- ❌ 테스트 없이 커밋
+- ❌ 깨진 코드 커밋
+- ❌ ESLint 경고 무시
+
+---
+
+## ✅ 항상 해야 할 사항 요약
+
+### 필수 패턴
+- ✅ 명시적 반환 타입 지정
+- ✅ 로딩/에러 상태 처리
+- ✅ 엣지 케이스 테스트
+- ✅ 의미 있는 변수명 사용
+- ✅ 접근성 속성 제공
+- ✅ JSDoc 주석 작성
+- ✅ AAA 패턴 테스트
+- ✅ 불변성 유지
+- ✅ 순수 함수 작성
+- ✅ 관심사 분리
+
+### 커밋 전 필수
+- ✅ `pnpm lint` 실행
+- ✅ `pnpm test` 실행
+- ✅ `pnpm build` 실행
+- ✅ TypeScript 에러 확인
+- ✅ 접근성 검증
+
+---
+
+## 📚 참고 파일 위치
+
+### 핵심 파일
+- 타입 정의: `src/types.ts`
+- 메인 컴포넌트: `src/App.tsx`
+- 진입점: `src/main.tsx`
+
+### 유틸리티
+- 날짜 계산: `src/utils/dateUtils.ts`
+- 이벤트 겹침: `src/utils/eventOverlap.ts`
+- 이벤트 유틸: `src/utils/eventUtils.ts`
+- 시간 검증: `src/utils/timeValidation.ts`
+- 알림 유틸: `src/utils/notificationUtils.ts`
+
+### 훅
+- 이벤트 폼: `src/hooks/useEventForm.ts`
+- 캘린더 뷰: `src/hooks/useCalendarView.ts`
+- 이벤트 작업: `src/hooks/useEventOperations.ts`
+- 알림: `src/hooks/useNotifications.ts`
+- 검색: `src/hooks/useSearch.ts`
+
+### 설정
+- TypeScript: `tsconfig.json`
+- ESLint: `eslint.config.js`
+- Vite: `vite.config.ts`
+- 패키지: `package.json`
+
+### 테스트
+- 테스트 설정: `src/setupTests.ts`
+- 목 핸들러: `src/__mocks__/handlers.ts`
+- 통합 테스트: `src/__tests__/medium.integration.spec.tsx`
+
+---
+
+## 💡 마지막 체크리스트
+
+코드를 작성할 때마다 다음을 확인하세요:
+
+1. [ ] 타입이 명시적으로 정의되어 있는가?
+2. [ ] 에러 처리가 구현되어 있는가?
+3. [ ] 접근성 속성이 있는가?
+4. [ ] 테스트가 작성되어 있는가?
+5. [ ] 함수가 50줄 이하인가?
+6. [ ] 코드가 중복되지 않았는가?
+7. [ ] 변수명이 의미 있는가?
+8. [ ] 불변성이 유지되는가?
+9. [ ] 성능이 고려되었는가?
+10. [ ] 린팅 경고가 없는가?
+
+**이 규칙들을 준수하면 고품질의 유지보수 가능한 코드를 작성할 수 있습니다!** 🎉
+
