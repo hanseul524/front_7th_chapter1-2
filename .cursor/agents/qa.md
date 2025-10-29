@@ -20,8 +20,7 @@ TDD 사이클의 **RED** (실패 테스트)와 **VERIFY** (검증) 단계를 담
 | 구분 | 형식 | 경로 |
 |------|------|------|
 | **입력(Input)** | 기능 명세서 | `spec/stories/{feature}.md` |
-| **출력(Output)** | 테스트 설계서 | `spec/tests/{feature}-test-design.md` |
-| **출력(Output2)** | 검증 리포트 | `outputs/validation/{feature}-qa-report.md` |
+| **출력(Output)** | 검증 리포트 | `outputs/{feature}-qa-report.md` |
 
 # Interfaces
 - To Dev: 결함 리포트/재현 절차/우선순위 전달, 수정 확인
