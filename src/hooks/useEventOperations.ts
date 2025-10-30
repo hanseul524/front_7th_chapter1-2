@@ -96,9 +96,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (
+    id: string,
+    options?: { scope?: 'single' | 'all'; repeatId?: string }
+  ) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      let response: Response;
+      if (options?.scope === 'all') {
+        const repeatId = options.repeatId;
+        response = await fetch(`/api/recurring-events/${repeatId}`, { method: 'DELETE' });
+      } else {
+        response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      }
 
       if (!response.ok) {
         throw new Error('Failed to delete event');

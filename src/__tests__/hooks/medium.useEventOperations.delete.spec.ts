@@ -27,7 +27,7 @@ describe('useEventOperations - 반복 일정 삭제 분기', () => {
 
     // Act
     await act(async () => {
-      // @ts-expect-error 테스트 주도 설계: options 두 번째 인자 도입 예정
+      // options 두 번째 인자 도입 예정
       await result.current.deleteEvent('e-1', { scope: 'single' });
     });
 
@@ -58,7 +58,7 @@ describe('useEventOperations - 반복 일정 삭제 분기', () => {
 
     // Act
     await act(async () => {
-      // @ts-expect-error 테스트 주도 설계: options 두 번째 인자 도입 예정
+      // options 두 번째 인자 도입 예정
       await result.current.deleteEvent('e-1', { scope: 'all', repeatId: 'grp-1' });
     });
 
@@ -67,5 +67,3 @@ describe('useEventOperations - 반복 일정 삭제 분기', () => {
     expect(deleteSingle).toBe(0);
   });
 });
-
-
