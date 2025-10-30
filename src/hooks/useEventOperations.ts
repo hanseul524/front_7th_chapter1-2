@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Event, EventForm } from '../types';
 import { generateRepeatEvents } from '../utils/repeatGeneration';
 
+type SaveScope = 'single' | 'all';
+
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const { enqueueSnackbar } = useSnackbar();
@@ -22,15 +24,38 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveEvent = async (eventData: Event | EventForm) => {
+  const saveEvent = async (eventData: Event | EventForm, options?: { scope?: SaveScope }) => {
     try {
       let response;
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        const scope = options?.scope;
+        if (scope === 'single') {
+          const payload: Event = {
+            ...(eventData as Event),
+            repeat: {
+              ...(eventData as Event).repeat,
+              type: 'none',
+            },
+          };
+          response = await fetch(`/api/events/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        } else if (scope === 'all') {
+          const repeatId = (eventData as Event).repeat?.id;
+          response = await fetch(`/api/recurring-events/${repeatId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else {
+          response = await fetch(`/api/events/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       } else {
         const isRepeating =
           (eventData as EventForm).repeat?.type && (eventData as EventForm).repeat.type !== 'none';
