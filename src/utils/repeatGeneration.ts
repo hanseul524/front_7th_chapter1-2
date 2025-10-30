@@ -43,12 +43,17 @@ function getDaysInMonth(year: number, month: number): number {
  * @param seed - 반복 설정을 포함한 이벤트 폼
  * @returns 생성된 반복 인스턴스 목록(시드 포함)
  */
+export function getEffectiveEndDate(repeatEndDate?: string): string {
+  return repeatEndDate ?? '2025-12-31';
+}
+
 export function generateRepeatEvents(seed: EventForm): EventForm[] {
   const { repeat } = seed;
   const interval = Math.max(1, repeat.interval || 1);
   const { y: sy, m: sm, d: sd } = toDateParts(seed.date);
-  const end = repeat.endDate ? toDateParts(repeat.endDate) : null;
-  const endKey = end ? toDateKeyUTC(end.y, end.m, end.d) : Number.POSITIVE_INFINITY;
+  const effectiveEnd = getEffectiveEndDate(repeat.endDate);
+  const end = toDateParts(effectiveEnd);
+  const endKey = toDateKeyUTC(end.y, end.m, end.d);
 
   const result: EventForm[] = [];
 
