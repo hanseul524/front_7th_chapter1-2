@@ -32,7 +32,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
-        const isRepeating = (eventData as EventForm).repeat?.type && (eventData as EventForm).repeat.type !== 'none';
+        const isRepeating =
+          (eventData as EventForm).repeat?.type && (eventData as EventForm).repeat.type !== 'none';
         if (isRepeating) {
           const instances = generateRepeatEvents(eventData as EventForm);
           response = await fetch('/api/events-list', {
