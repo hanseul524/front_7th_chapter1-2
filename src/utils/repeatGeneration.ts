@@ -61,7 +61,8 @@ export function clampToSystemMaxEndDate(repeatEndDate?: string): string {
  * @returns 보정된 종료일(YYYY-MM-DD)
  */
 export function getEffectiveEndDate(repeatEndDate?: string): string {
-  return clampToSystemMaxEndDate(repeatEndDate);
+  // 종료일이 주어지면 그대로 사용하고, 미입력 시에만 시스템 한도를 기본값으로 사용한다
+  return repeatEndDate ?? MAX_REPEAT_END_DATE;
 }
 
 export function generateRepeatEvents(seed: EventForm): EventForm[] {
