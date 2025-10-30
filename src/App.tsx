@@ -457,35 +457,30 @@ function App() {
                   <MenuItem value="yearly">매년</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl fullWidth>
-                <FormLabel htmlFor="repeat-interval">반복 간격</FormLabel>
-                <TextField
-                  id="repeat-interval"
-                  size="small"
-                  type="number"
-                  value={repeatInterval}
-                  onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                  slotProps={{ htmlInput: { min: 1, max: 999 } }}
-                  aria-label="반복 간격"
-                />
-              </FormControl>
-              <FormControl fullWidth>
-                <FormLabel htmlFor="repeat-end-date">반복 종료일</FormLabel>
-                <TextField
-                  id="repeat-end-date"
-                  size="small"
-                  type="date"
-                  value={repeatEndDate}
-                  onChange={(e) => setRepeatEndDate(e.target.value)}
-                  slotProps={{
-                    htmlInput: {
-                      min: date || new Date().toISOString().split('T')[0],
-                      max: '2025-12-31',
-                    },
-                  }}
-                  aria-label="반복 종료일"
-                />
-              </FormControl>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth>
+                  <FormLabel>반복 간격</FormLabel>
+                  <TextField
+                    id="repeat-interval"
+                    size="small"
+                    type="number"
+                    value={repeatInterval}
+                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    slotProps={{ htmlInput: { min: 1, max: 999 } }}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <FormLabel>반복 종료일</FormLabel>
+                  <TextField
+                    id="repeat-end-date"
+                    size="small"
+                    type="date"
+                    value={repeatEndDate}
+                    onChange={(e) => setRepeatEndDate(e.target.value)}
+                    slotProps={{ htmlInput: { max: '2025-12-31' } }}
+                  />
+                </FormControl>
+              </Stack>
             </Stack>
           )}
 
