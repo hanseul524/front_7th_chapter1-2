@@ -67,6 +67,14 @@ const notificationOptions = [
   { value: 1440, label: '1일 전' },
 ];
 
+const RepeatIconIfNeeded = ({
+  repeatType,
+  size = 'inherit',
+}: {
+  repeatType: RepeatType;
+  size?: 'small' | 'inherit';
+}) => (repeatType !== 'none' ? <Repeat fontSize={size} aria-label="반복 일정" /> : null);
+
 function App() {
   const {
     title,
@@ -208,9 +216,7 @@ function App() {
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
                               {isNotified && <Notifications fontSize="small" />}
-                              {event.repeat.type !== 'none' && (
-                                <Repeat fontSize="small" aria-label="반복 일정" />
-                              )}
+                              <RepeatIconIfNeeded repeatType={event.repeat.type} size="small" />
                               <Typography
                                 variant="caption"
                                 noWrap
@@ -298,9 +304,10 @@ function App() {
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
                                     {isNotified && <Notifications fontSize="small" />}
-                                    {event.repeat.type !== 'none' && (
-                                      <Repeat fontSize="small" aria-label="반복 일정" />
-                                    )}
+                                    <RepeatIconIfNeeded
+                                      repeatType={event.repeat.type}
+                                      size="small"
+                                    />
                                     <Typography
                                       variant="caption"
                                       noWrap
@@ -562,7 +569,7 @@ function App() {
                   <Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       {notifiedEvents.includes(event.id) && <Notifications color="error" />}
-                      {event.repeat.type !== 'none' && <Repeat aria-label="반복 일정" />}
+                      <RepeatIconIfNeeded repeatType={event.repeat.type} />
                       <Typography
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'error' : 'inherit'}
