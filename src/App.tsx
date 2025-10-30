@@ -121,6 +121,8 @@ function App() {
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const [isRepeatEditDialogOpen, setIsRepeatEditDialogOpen] = useState(false);
   const [pendingEventData, setPendingEventData] = useState<Event | EventForm | null>(null);
+  const [isRepeatDeleteDialogOpen, setIsRepeatDeleteDialogOpen] = useState(false);
+  const [pendingDeleteEvent, setPendingDeleteEvent] = useState<Event | null>(null);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -633,7 +635,17 @@ function App() {
                     <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
                       <Edit />
                     </IconButton>
-                    <IconButton aria-label="Delete event" onClick={() => deleteEvent(event.id)}>
+                    <IconButton
+                      aria-label="Delete event"
+                      onClick={() => {
+                        if (event.repeat.type !== 'none') {
+                          setPendingDeleteEvent(event);
+                          setIsRepeatDeleteDialogOpen(true);
+                        } else {
+                          void deleteEvent(event.id);
+                        }
+                      }}
+                    >
                       <Delete />
                     </IconButton>
                   </Stack>
@@ -682,6 +694,42 @@ function App() {
             }}
           >
             계속 진행
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={isRepeatDeleteDialogOpen} onClose={() => setIsRepeatDeleteDialogOpen(false)}>
+        <DialogTitle>반복 일정 삭제</DialogTitle>
+        <DialogContent>
+          <DialogContentText>해당 일정만 삭제하시겠어요?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            aria-label="단일 삭제"
+            onClick={async () => {
+              setIsRepeatDeleteDialogOpen(false);
+              if (pendingDeleteEvent) {
+                await deleteEvent(pendingDeleteEvent.id, { scope: 'single' });
+                setPendingDeleteEvent(null);
+              }
+            }}
+          >
+            예
+          </Button>
+          <Button
+            aria-label="전체 삭제"
+            onClick={async () => {
+              setIsRepeatDeleteDialogOpen(false);
+              if (pendingDeleteEvent) {
+                await deleteEvent(pendingDeleteEvent.id, {
+                  scope: 'all',
+                  repeatId: pendingDeleteEvent.repeat.id,
+                });
+                setPendingDeleteEvent(null);
+              }
+            }}
+          >
+            아니오
           </Button>
         </DialogActions>
       </Dialog>

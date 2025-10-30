@@ -48,9 +48,8 @@ describe('반복 일정 삭제 플로우(UI)', () => {
     const deleteBtn = await screen.findByRole('button', { name: 'Delete event' });
     await user.click(deleteBtn);
 
-    // 다이얼로그가 보여야 함 (현재 미구현 → 실패 예상)
-    await screen.findByText('해당 일정만 삭제하시겠어요?');
+    // 다이얼로그가 보여야 함
+    const dialog = await screen.findByText('해당 일정만 삭제하시겠어요?');
+    expect(dialog).toBeInTheDocument();
   });
 });
-
-
