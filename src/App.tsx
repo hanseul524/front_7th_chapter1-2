@@ -124,6 +124,37 @@ function App() {
   const [isRepeatDeleteDialogOpen, setIsRepeatDeleteDialogOpen] = useState(false);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState<Event | null>(null);
 
+  const requestDelete = useCallback(
+    (event: Event) => {
+      if (event.repeat.type !== 'none') {
+        setPendingDeleteEvent(event);
+        setIsRepeatDeleteDialogOpen(true);
+      } else {
+        void deleteEvent(event.id);
+      }
+    },
+    [deleteEvent]
+  );
+
+  const handleConfirmSingleDelete = useCallback(async () => {
+    setIsRepeatDeleteDialogOpen(false);
+    if (pendingDeleteEvent) {
+      await deleteEvent(pendingDeleteEvent.id, { scope: 'single' });
+      setPendingDeleteEvent(null);
+    }
+  }, [pendingDeleteEvent, deleteEvent]);
+
+  const handleConfirmAllDelete = useCallback(async () => {
+    setIsRepeatDeleteDialogOpen(false);
+    if (pendingDeleteEvent) {
+      await deleteEvent(pendingDeleteEvent.id, {
+        scope: 'all',
+        repeatId: pendingDeleteEvent.repeat.id,
+      });
+      setPendingDeleteEvent(null);
+    }
+  }, [pendingDeleteEvent, deleteEvent]);
+
   const { enqueueSnackbar } = useSnackbar();
 
   const addOrUpdateEvent = async () => {
@@ -635,17 +666,7 @@ function App() {
                     <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
                       <Edit />
                     </IconButton>
-                    <IconButton
-                      aria-label="Delete event"
-                      onClick={() => {
-                        if (event.repeat.type !== 'none') {
-                          setPendingDeleteEvent(event);
-                          setIsRepeatDeleteDialogOpen(true);
-                        } else {
-                          void deleteEvent(event.id);
-                        }
-                      }}
-                    >
+                    <IconButton aria-label="Delete event" onClick={() => requestDelete(event)}>
                       <Delete />
                     </IconButton>
                   </Stack>
@@ -704,31 +725,10 @@ function App() {
           <DialogContentText>해당 일정만 삭제하시겠어요?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            aria-label="단일 삭제"
-            onClick={async () => {
-              setIsRepeatDeleteDialogOpen(false);
-              if (pendingDeleteEvent) {
-                await deleteEvent(pendingDeleteEvent.id, { scope: 'single' });
-                setPendingDeleteEvent(null);
-              }
-            }}
-          >
+          <Button aria-label="단일 삭제" onClick={handleConfirmSingleDelete}>
             예
           </Button>
-          <Button
-            aria-label="전체 삭제"
-            onClick={async () => {
-              setIsRepeatDeleteDialogOpen(false);
-              if (pendingDeleteEvent) {
-                await deleteEvent(pendingDeleteEvent.id, {
-                  scope: 'all',
-                  repeatId: pendingDeleteEvent.repeat.id,
-                });
-                setPendingDeleteEvent(null);
-              }
-            }}
-          >
+          <Button aria-label="전체 삭제" onClick={handleConfirmAllDelete}>
             아니오
           </Button>
         </DialogActions>

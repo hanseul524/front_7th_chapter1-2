@@ -96,6 +96,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  /**
+   * 이벤트 삭제 엔트리 포인트
+   * - scope 미지정 또는 'single': 단일 인스턴스 삭제
+   * - scope 'all': 반복 그룹 전체 삭제(repeatId 필요)
+   */
   const deleteEvent = async (
     id: string,
     options?: { scope?: 'single' | 'all'; repeatId?: string }
