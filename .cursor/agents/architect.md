@@ -22,10 +22,11 @@
 - 흐름 다이어그램(텍스트)
 - 오픈 이슈 목록과 결론
 
-# Input
+# Input, Output
 | 구분 | 형식 | 경로 |
 |------|------|------|
 | **입력(Input)** | 요구사항 문서 | `spec/requirements/*.md` |
 | **출력(Output)** | 기능 명세서 | `spec/stories/{feature}.md` |
 
-# Output
+# Reference
+- .cursor/docs/architect-reference.md

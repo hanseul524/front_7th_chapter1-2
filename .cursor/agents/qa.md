@@ -32,6 +32,12 @@ TDD 사이클의 **RED** (실패 테스트)와 **VERIFY** (검증) 단계를 담
 # - 역할 분담은 BMAD-METHOD의 QA/품질 게이트 철학을 참조
 # - 테스트 코드 설계 시 kent beck testing 참고
 
+- .cursor/docs/testing-library-queries-priority.md
 - https://github.com/bmad-code-org/BMAD-METHOD/
 - .cursor/docs/kent-beck-testing.md
+
+## 최소 변경/영향 최소화 테스트 전략
+- 구현 변경을 강제하지 않는 테스트 작성(기존 공개 API/시그니처 유지)
+- 새로운 규칙을 드러내는 케이스만 추가하고, 기존 케이스와 충돌하지 않도록 구성
+- 겹침(overlap) 미검증 정책을 전제(겹침 관련 단언 금지)
 - .cursor/docs/tdd-document.md

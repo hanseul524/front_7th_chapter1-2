@@ -42,3 +42,8 @@ QA의 테스트 설계서를 기반으로 코드를 구현하고,
 - https://github.com/bmad-code-org/BMAD-METHOD/
 - .cursor/docs/tdd-document.md
 - .cursor/docs/kent-beck-testing.md
+
+## 최소 변경/영향 최소화 원칙
+- 기존 공개 API/타입/파일 경로 유지, 내부 로직만 국소 변경
+- 기존 테스트와 호환을 유지하고, 신규 규칙을 커버하는 테스트만 추가
+- 관심사 분리 준수: 유틸 변경으로 해결하고 컴포넌트/훅은 변경 최소화
