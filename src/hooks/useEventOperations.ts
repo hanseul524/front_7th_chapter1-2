@@ -5,6 +5,7 @@ import { Event, EventForm } from '../types';
 import { generateRepeatEvents } from '../utils/repeatGeneration';
 
 type SaveScope = 'single' | 'all';
+type SaveOptions = { scope?: SaveScope };
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -24,7 +25,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveEvent = async (eventData: Event | EventForm, options?: { scope?: SaveScope }) => {
+  /**
+   * 이벤트 저장/수정 엔트리 포인트
+   * - 생성 모드: 단일 또는 반복 인스턴스 일괄 생성
+   * - 편집 모드: scope에 따라 단일 분리 수정 또는 반복 그룹 전체 수정
+   */
+  const saveEvent = async (eventData: Event | EventForm, options?: SaveOptions) => {
     try {
       let response;
       if (editing) {

@@ -36,7 +36,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
@@ -120,6 +120,7 @@ function App() {
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const [isRepeatEditDialogOpen, setIsRepeatEditDialogOpen] = useState(false);
+  const [pendingEventData, setPendingEventData] = useState<Event | EventForm | null>(null);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -153,6 +154,7 @@ function App() {
 
     // 편집 중인 반복 일정 저장 시: 단일/전체 선택 다이얼로그 노출
     if (editingEvent && editingEvent.repeat.type !== 'none') {
+      setPendingEventData(eventData);
       setIsRepeatEditDialogOpen(true);
       return;
     }
@@ -166,6 +168,22 @@ function App() {
       resetForm();
     }
   };
+
+  const handleConfirmSingleEdit = useCallback(async () => {
+    setIsRepeatEditDialogOpen(false);
+    if (pendingEventData) {
+      await saveEvent(pendingEventData as Event, { scope: 'single' });
+      setPendingEventData(null);
+    }
+  }, [pendingEventData, saveEvent]);
+
+  const handleConfirmAllEdit = useCallback(async () => {
+    setIsRepeatEditDialogOpen(false);
+    if (pendingEventData) {
+      await saveEvent(pendingEventData as Event, { scope: 'all' });
+      setPendingEventData(null);
+    }
+  }, [pendingEventData, saveEvent]);
 
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
@@ -674,10 +692,10 @@ function App() {
           <DialogContentText>해당 일정만 수정하시겠어요?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button aria-label="단일 수정" onClick={() => setIsRepeatEditDialogOpen(false)}>
+          <Button aria-label="단일 수정" onClick={handleConfirmSingleEdit}>
             예
           </Button>
-          <Button aria-label="전체 수정" onClick={() => setIsRepeatEditDialogOpen(false)}>
+          <Button aria-label="전체 수정" onClick={handleConfirmAllEdit}>
             아니오
           </Button>
         </DialogActions>
