@@ -43,8 +43,14 @@ function getDaysInMonth(year: number, month: number): number {
  * @param seed - 반복 설정을 포함한 이벤트 폼
  * @returns 생성된 반복 인스턴스 목록(시드 포함)
  */
+export function clampToSystemMaxEndDate(repeatEndDate?: string): string {
+  const MAX = '2025-12-31';
+  if (!repeatEndDate) return MAX;
+  return repeatEndDate > MAX ? MAX : repeatEndDate;
+}
+
 export function getEffectiveEndDate(repeatEndDate?: string): string {
-  return repeatEndDate ?? '2025-12-31';
+  return clampToSystemMaxEndDate(repeatEndDate);
 }
 
 export function generateRepeatEvents(seed: EventForm): EventForm[] {
