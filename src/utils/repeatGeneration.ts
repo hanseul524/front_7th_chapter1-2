@@ -1,5 +1,7 @@
 import { EventForm } from '../types';
 
+export const MAX_REPEAT_END_DATE = '2025-12-31' as const;
+
 /**
  * 'YYYY-MM-DD' 문자열을 UTC 날짜 파트로 파싱합니다.
  * @param dateStr - ISO 날짜 문자열(YYYY-MM-DD)
@@ -43,12 +45,21 @@ function getDaysInMonth(year: number, month: number): number {
  * @param seed - 반복 설정을 포함한 이벤트 폼
  * @returns 생성된 반복 인스턴스 목록(시드 포함)
  */
+/**
+ * 시스템 최대 종료일(2025-12-31)로 종료일을 클램프합니다.
+ * @param repeatEndDate - 입력 종료일(YYYY-MM-DD) 또는 undefined
+ * @returns 한도 이내 종료일(YYYY-MM-DD)
+ */
 export function clampToSystemMaxEndDate(repeatEndDate?: string): string {
-  const MAX = '2025-12-31';
-  if (!repeatEndDate) return MAX;
-  return repeatEndDate > MAX ? MAX : repeatEndDate;
+  if (!repeatEndDate) return MAX_REPEAT_END_DATE;
+  return repeatEndDate > MAX_REPEAT_END_DATE ? MAX_REPEAT_END_DATE : repeatEndDate;
 }
 
+/**
+ * 유효한 종료일을 반환합니다(미입력/초과 시 시스템 한도로 보정).
+ * @param repeatEndDate - 입력 종료일(YYYY-MM-DD) 또는 undefined
+ * @returns 보정된 종료일(YYYY-MM-DD)
+ */
 export function getEffectiveEndDate(repeatEndDate?: string): string {
   return clampToSystemMaxEndDate(repeatEndDate);
 }
