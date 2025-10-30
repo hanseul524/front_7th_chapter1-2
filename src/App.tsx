@@ -119,6 +119,7 @@ function App() {
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
+  const [isRepeatEditDialogOpen, setIsRepeatEditDialogOpen] = useState(false);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -149,6 +150,12 @@ function App() {
       },
       notificationTime,
     };
+
+    // 편집 중인 반복 일정 저장 시: 단일/전체 선택 다이얼로그 노출
+    if (editingEvent && editingEvent.repeat.type !== 'none') {
+      setIsRepeatEditDialogOpen(true);
+      return;
+    }
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -657,6 +664,21 @@ function App() {
             }}
           >
             계속 진행
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={isRepeatEditDialogOpen} onClose={() => setIsRepeatEditDialogOpen(false)}>
+        <DialogTitle>반복 일정 수정</DialogTitle>
+        <DialogContent>
+          <DialogContentText>해당 일정만 수정하시겠어요?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button aria-label="단일 수정" onClick={() => setIsRepeatEditDialogOpen(false)}>
+            예
+          </Button>
+          <Button aria-label="전체 수정" onClick={() => setIsRepeatEditDialogOpen(false)}>
+            아니오
           </Button>
         </DialogActions>
       </Dialog>

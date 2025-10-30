@@ -1,6 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 
@@ -53,9 +53,8 @@ describe('반복 일정 수정 플로우(UI)', () => {
     const saveBtn = await screen.findByTestId('event-submit-button');
     await user.click(saveBtn);
 
-    // 다이얼로그가 보여야 함 (현재는 미구현 → 테스트 실패)
-    await screen.findByText('해당 일정만 수정하시겠어요?');
+    // 다이얼로그가 보여야 함
+    const dialogText = await screen.findByText('해당 일정만 수정하시겠어요?');
+    expect(dialogText).toBeInTheDocument();
   });
 });
-
-
